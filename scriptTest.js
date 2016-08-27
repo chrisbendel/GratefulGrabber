@@ -51,27 +51,19 @@ function download_all(urls) {
   var zip = new JSZip();
   var deferreds = [];
 
-  $.each(urls, function(k, v) {
-    var song = JSON.parse(v)
-    var url = song.sources[0].file;
-    var full_url = "https://archive.org" + url;
-
-    var title = url.substring(url.lastIndexOf('/') + 1);
+  $.each(urls, function(key, new_url) {
+    var full_url = new_url;
+    var title = url.substring(full_url.lastIndexOf('/') + 1);
     deferreds.push(deferredAddZip(full_url, title, zip));
   });
-
-  $.when.apply($, deferreds).done(function() {
-    var blob = zip.generate({
-      type: "blob"
-    });
-    $("#downloadAll").prop("disabled", false);
-    $("#progress").text("Compressing: Finished");
-    var url = window.location.pathname;
-    var show = url.substring(url.lastIndexOf('/') + 1);
-    saveAs(blob, show + ".zip");
-  }).fail(function(err) {
-    console.log("Ahh craig:" + err);
-  });
+  $("#downloadAll").prop("disabled", false);
+  $("#progress").text("Compressing: Finished");
+  var url = window.location.pathname;
+  var show = url.substring(url.lastIndexOf('/') + 1);
+  saveAs(blob, show + ".zip");
+}).fail(function(err) {
+  console.log("Ahh craig:" + err);
+});
 };
 
 function startApp() {
