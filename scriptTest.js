@@ -53,17 +53,9 @@ function doProgress(oEvent) {
     var zip = new JSZip();
     var deferreds = [];
 
-    $.each(urls, function(k,v) {
-      var song = JSON.parse(v)
-      var url = song.sources[0].file;
-      var full_url = "https://archive.org" + url;
-
-      // 64kbps support not working yet...
-      // if ($(".content:contains('64kbps')").size() > 0) {
-      //  full_url = full_url.replace(".mp3","_64kb.mp3");
-      // }
-
-      var title = url.substring(url.lastIndexOf('/')+1);
+    $.each(urls, function(key, new_url) {
+      var full_url = new_url;
+      var title = url.substring(full_url.lastIndexOf('/')+1);
       deferreds.push(deferredAddZip(full_url, title, zip));
     });
 
