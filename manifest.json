@@ -3,7 +3,7 @@
   "version": "1.3.1",
   "manifest_version": 2,
   "description": "Easy soundboard downloads from archive!",
-  "homepage_url": "http://bendel.ddns.net",
+  "homepage_url": "https://google.com",
   "icons": {
     "16": "icons/stealie16.png",
     "48": "icons/stealie48.png",
@@ -19,6 +19,10 @@
   "permissions": [
     "https://archive.org/*"
   ],
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "web_accessible_resources": [
+    "box.html"
+  ],
   "content_scripts": [
     {
       "matches": [
@@ -30,8 +34,10 @@
         "js/jszip/jszip.js",
         "js/jszip-utils/jszip-utils.js",
         "js/filesaver/FileSaver.min.js",
-        "script.js"
-      ]
+        "js/mustache/mustache.min.js",
+        "scriptTest.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
