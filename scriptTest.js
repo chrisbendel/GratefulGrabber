@@ -61,58 +61,62 @@ function download_all(urls) {
   var url = window.location.pathname;
   var show = url.substring(url.lastIndexOf('/') + 1);
   saveAs(blob, show + ".zip");
-}).fail(function(err) {
-  console.log("Ahh craig:" + err);
-});
 };
 
 function startApp() {
   console.log('jwloaded');
 }
 
-var req = new XMLHttpRequest();
-req.open("GET", chrome.extension.getURL('box.html'), true);
-req.onreadystatechange = function() {
-  if (req.readyState == 4 && req.status == 200) {
-    console.log('loaded');
-    var template = Mustache.to_html(req.responseText, {
-      name: "Chris"
-    });
-    $('#theatre-ia-wrap').after(template);
+// Disabling this because we can no longer use chrome.extension.getURL()
+// in this script since it no longer has access to that chrome api
+// We changed this script froma  contentScript to a web accessible script which
+// removed our access.
+
+// var req = new XMLHttpRequest();
+// req.open("GET", chrome.extension.getURL('box.html'), true);
+// req.onreadystatechange = function() {
+//   if (req.readyState == 4 && req.status == 200) {
+//     console.log('loaded');
+//     var template = Mustache.to_html(req.responseText, {
+//       name: "Chris"
+//     });
+//     $('#theatre-ia-wrap').after(template);
+//   }
+// };
+// req.send(null);
+
+
+$(document).ready(function() {
+  var myContent = $('<p />');
+  var myList = [];
+  console.log(jwplayer('jw6'));
+  var numOfSongs = jwplayer('jw6').getPlaylist().length;
+
+  for (var i = 0; i < numOfSongs; i++) {
+    var song = jwplayer('jw6').getPlaylist()[i].file;
+    var title = jwplayer('jw6').getPlaylist()[i].title;
+    var newUrl = "http://www.archive.org".concat(song);
+    myList[i] = newUrl;
+    myContent.append("<a href=\"" + newUrl + "\" class=\"downloadfile\"  download>" + title + "</a>");
+    myContent.append("<br/>");
   }
-};
-req.send(null);
 
-var player = null;
+  $('#downloadBox').append("<h2 style=\"text-align:center;\">Grateful Grabber</h2> <br/> <p style=\"text-align:center\"> Download This Show!</p>");
+  $('#downloadBox').append("<input id=\"downloadAll\" style =\"width:125px; font-weight: bold; ; height: auto; white-space:normal; border-radius:7px;\" type=\"button\" value=\"As Zip (Folder)\" /> <hr/>");
+  $('#downloadBox').append("<input id=\"downloadIndividually\" style =\"font-weight: bold; width:125px;; height: auto; white-space:normal; border-radius:7px;\" type=\"button\" value=\"Individual Songs (No Folder)\" /> <hr/>");
+  $('#downloadBox').append(myContent);
 
-var myContent = $('<p />');
-var myList = [];
-var numOfSongs = jwplayer('jw6').getPlaylist().length;
+  $('#downloadAll').click(function() {
+    $("#downloadAll").prop("disabled", true);
+    if ($("#progress").length == 0) {
+      $("<div id='progress'></div>").insertAfter("#downloadAll");
+    }
+    download_all(myList);
+  });
 
-for (var i = 0; i < numOfSongs; i++) {
-  var song = jwplayer('jw6').getPlaylist()[i].file;
-  var title = jwplayer('jw6').getPlaylist()[i].title;
-  var newUrl = "http://www.archive.org".concat(song);
-  myList[i] = newUrl;
-  myContent.append("<a href=\"" + newUrl + "\" class=\"downloadfile\"  download>" + title + "</a>");
-  myContent.append("<br/>");
-}
-
-$('#downloadBox').append("<h2 style=\"text-align:center;\">Grateful Grabber</h2> <br/> <p style=\"text-align:center\"> Download This Show!</p>");
-$('#downloadBox').append("<input id=\"downloadAll\" style =\"width:125px; font-weight: bold; ; height: auto; white-space:normal; border-radius:7px;\" type=\"button\" value=\"As Zip (Folder)\" /> <hr/>");
-$('#downloadBox').append("<input id=\"downloadIndividually\" style =\"font-weight: bold; width:125px;; height: auto; white-space:normal; border-radius:7px;\" type=\"button\" value=\"Individual Songs (No Folder)\" /> <hr/>");
-$('#downloadBox').append(myContent);
-
-$('#downloadAll').click(function() {
-  $("#downloadAll").prop("disabled", true);
-  if ($("#progress").length == 0) {
-    $("<div id='progress'></div>").insertAfter("#downloadAll");
-  }
-  download_all(myList);
-});
-
-$('#downloadIndividually').click(function() {
-  for (i = 0; i < numOfSongs.length; i++) {
-    $('.downloadfile')[i].click();
-  };
+  $('#downloadIndividually').click(function() {
+    for (i = 0; i < numOfSongs.length; i++) {
+      $('.downloadfile')[i].click();
+    };
+  });
 });
