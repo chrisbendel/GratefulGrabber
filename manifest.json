@@ -17,12 +17,12 @@
     "persistent": true
   },
   "permissions": [
-    "https://archive.org/*"
+    "https://archive.org/*",
+    "<all_urls>"
   ],
   "content_security_policy": "script-src 'self'; object-src 'self'",
   "web_accessible_resources": [
-    "box.html",
-    "scriptTest.js"
+    "box.html"
   ],
   "content_scripts": [
     {
@@ -36,9 +36,9 @@
         "js/jszip-utils/jszip-utils.js",
         "js/filesaver/FileSaver.min.js",
         "js/mustache/mustache.min.js",
-        "tmp.js"
+        "scriptTest.js"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_end"
     }
   ]
 }
