@@ -4,7 +4,6 @@ function resetMessage() {
   $("#result")
     .removeClass()
     .text("");
-  // $("#circle img").remove();
 }
 
 function Message(text) {
@@ -30,31 +29,18 @@ function Error(text) {
 var songs = [],
   object = [];
 
-var totalSize = 0,
-  fileSize;
-
-var list = $('#wrap').find('.container:last').find('script:last').html();
-var myList = list.match(/\{\"title\"(.*?\}\]\})/g);
+var list = $('#wrap').find('.container:last').find('script:last').html(),
+    myList = list.match(/\{\"title\"(.*?\}\]\})/g);
 _.each(myList, function(details) {
   details = JSON.parse(details);
-  var url = "https://www.archive.org" + details.sources[0].file;
-  trackLink = "<a href=\"" + url + "\" class=\"downloadfile\"  download>" + details.title + "</a>";
-
-  var req = $.ajax({
-    type: "HEAD",
-    url: url,
-    success: function() {
-      fileSize = req.getResponseHeader('Content-Length');
-      fileSize = parseFloat(fileSize);
-      totalSize += fileSize;
-    }
-  });
+  var url = "https://www.archive.org" + details.sources[0].file,
+      trackLink = "<a href=\"" + url + "\" class=\"downloadfile\"  download>" + details.title + "</a>";
   object.push(details);
   songs.push(trackLink);
 });
 
 var req = new XMLHttpRequest();
-var owl = chrome.extension.getURL('icons/owl.png');
+var img = chrome.extension.getURL('icons/gdpainting.png');
 req.open("GET", chrome.extension.getURL('box.html'), true);
 req.onreadystatechange = function() {
   if (req.readyState == 4 && req.status == 200) {
@@ -64,7 +50,7 @@ req.onreadystatechange = function() {
     });
     var template = Mustache.to_html(req.responseText, {
       songs: songs,
-      owl: owl
+      img: img
     });
     $('#theatre-ia-wrap').after(template);
   }
@@ -89,13 +75,13 @@ function deferredAddZip(url, filename, zip) {
 
 $('body').on('click', '#downloadAll', function() {
   resetMessage();
-  Loading('Downloading the show now. Hang tight for a sec.');
+
 
   $('#circle').circleProgress({
     value: .01,
     size: 200,
     animation: {
-      duration: 250,
+      duration: 400,
       easing: "circleProgressEasing"
     },
     fill: {
@@ -103,9 +89,9 @@ $('body').on('click', '#downloadAll', function() {
     }
   });
 
-  var zip = new JSZip();
-  var deferreds = [];
-  var showName = $(".key-val-big:contains('Published')").find('a:first').text();
+  var zip = new JSZip(),
+      deferreds = [],
+      showName = $(".key-val-big:contains('Published')").find('a:first').text();
 
   _.each(object, function(data) {
     var url = "https://www.archive.org" + data.sources[0].file;
@@ -131,6 +117,9 @@ function doProgress(oEvent) {
     updatePercent(oEvent.target.responseURL, percentComplete);
     var percent = getTotalPercent() / object.length;
     $('#circle').circleProgress('value', percent);
+    $('#circle').on('circle-animation-progress', function(event, progress) {
+      Loading('Downloading the show now. Hang tight for a sec. ' + (parseInt(percent * 100) + '%'));
+    });
   }
 }
 

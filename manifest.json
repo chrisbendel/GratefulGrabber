@@ -23,7 +23,7 @@
   "content_security_policy": "script-src 'self'; object-src 'self'",
   "web_accessible_resources": [
     "box.html",
-    "icons/owl.png"
+    "icons/gdpainting.png"
   ],
   "content_scripts": [
     {
