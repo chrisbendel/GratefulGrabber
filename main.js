@@ -1,5 +1,12 @@
 var xhr = {};
 
+var fa = document.createElement('style');
+fa.type = 'text/css';
+fa.textContent = '@font-face { font-family: FontAwesome; src: url("'
+    + chrome.extension.getURL('lib/fa/fonts/fontawesome-webfont.woff')
+    + '"); }';
+document.head.appendChild(fa);
+
 function resetMessage() {
   $("#result")
     .removeClass()

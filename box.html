@@ -1,39 +1,44 @@
 <div class="container container-ia" style="margin-top: 15px;">
-  <div class="relative-row row">
-    <div class="col-xs-12">
-      <div class="row">
-        <div class="well" id="downloadBox">
-          <h2 class="text-center">Grateful Grabber</h2>
-          <div class="row text-center">
-            <div class="col-xs-4">
-              <h4>Download Progress</h4>
-              <div id="circle"><strong></strong></div>
-              <div id="result"></div>
-            </div>
-            <div class="col-xs-4">
-              <img height="300px" width="300" src="{{img}}" />
-            </div>
-            <div class="col-xs-4">
-              <div class="btn-group-vertical text-center">
-                <button style="margin-top: 20px;" id="downloadAll" class="btn btn-primary" type="button">Download This Show</button>
-                <div class="dropdown" style="margin-top: 20px;">
-                  <button id="allSongs" style="margin-bottom: 20px;" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Show all songs<span class="caret"></span></button>
-                  <ul class="dropdown-menu" role="menu" aria-labelledby="allSongs">
-                    {{#songs}}
-                    <li role="presentation">{{{.}}}</li>
-                    {{/songs}}
-                  </ul>
+    <div class="relative-row row">
+        <div class="col-xs-12">
+            <div class="row">
+                <div class="panel panel-default" id="downloadBox">
+                    <div class="panel-heading">
+                        <h2 class="text-center collapsed" style="cursor: pointer;" aria-expanded="false" data-toggle="collapse" data-target="#body">Grateful Grabber <i class="fa fa-caret-down "></i></h2>
+                    </div>
+                    <div class="panel-body collapse" id="body" style="height: 30px;">
+                        <div class="row text-center">
+                            <div class="col-xs-4">
+                                <h4>Download Progress</h4>
+                                <div id="circle"><strong></strong></div>
+                                <div id="result"></div>
+                            </div>
+                            <div class="col-xs-4">
+                                <img height="300px" width="300" src="{{img}}" />
+                            </div>
+                            <div class="col-xs-4">
+                                <div class="btn-group-vertical text-center">
+                                    <button style="margin-top: 20px; border-radius: 4px;" id="downloadAll" class="btn btn-primary" type="button">Download This Show</button>
+                                    <div class="dropdown" style="margin-top: 20px;">
+                                        <button id="allSongs" style="margin-bottom: 20px;" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Show all songs&nbsp;<i class="fa fa-caret-down"></i></button>
+                                        <ul class="dropdown-menu" role="menu" aria-labelledby="allSongs">
+                                            {{#songs}}
+                                            <li role="presentation">{{{.}}}</li>
+                                            {{/songs}}
+                                        </ul>
+                                    </div>
+                                    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-top: 20px;">
+                                        <input type="hidden" name="cmd" value="_s-xclick" />
+                                        <input type="hidden" name="hosted_button_id" value="YHSAX5KS6HCSW" />
+                                        <input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate" />
+                                        <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-top: 20px;">
-                  <input type="hidden" name="cmd" value="_s-xclick" />
-                  <input type="hidden" name="hosted_button_id" value="YHSAX5KS6HCSW" />
-                  <input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate" />
-                  <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
-                </form>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
