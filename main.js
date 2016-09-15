@@ -1,5 +1,12 @@
 var xhr = {};
 
+var fa = document.createElement('style');
+fa.type = 'text/css';
+fa.textContent = '@font-face { font-family: FontAwesome; src: url("' +
+  chrome.extension.getURL('lib/fa/fonts/fontawesome-webfont.woff') +
+  '"); }';
+document.head.appendChild(fa);
+
 function resetMessage() {
   $("#result")
     .removeClass()
@@ -30,11 +37,11 @@ var songs = [],
   object = [];
 
 var list = $('#wrap').find('.container:last').find('script:last').html(),
-    myList = list.match(/\{\"title\"(.*?\}\]\})/g);
+  myList = list.match(/\{\"title\"(.*?\}\]\})/g);
 _.each(myList, function(details) {
   details = JSON.parse(details);
   var url = "https://www.archive.org" + details.sources[0].file,
-      trackLink = "<a href=\"" + url + "\" class=\"downloadfile\"  download>" + details.title + "</a>";
+    trackLink = "<a href=\"" + url + "\" class=\"downloadfile\"  download>" + details.title + "</a>";
   object.push(details);
   songs.push(trackLink);
 });
@@ -76,7 +83,6 @@ function deferredAddZip(url, filename, zip) {
 $('body').on('click', '#downloadAll', function() {
   resetMessage();
 
-
   $('#circle').circleProgress({
     value: .01,
     size: 200,
@@ -90,8 +96,8 @@ $('body').on('click', '#downloadAll', function() {
   });
 
   var zip = new JSZip(),
-      deferreds = [],
-      showName = $(".key-val-big:contains('Published')").find('a:first').text();
+    deferreds = [],
+    showName = $(".key-val-big:contains('Published')").find('a:first').text();
 
   _.each(object, function(data) {
     var url = "https://www.archive.org" + data.sources[0].file;
