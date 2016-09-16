@@ -1,12 +1,5 @@
 var xhr = {};
 
-var fa = document.createElement('style');
-fa.type = 'text/css';
-fa.textContent = '@font-face { font-family: FontAwesome; src: url("' +
-  chrome.extension.getURL('lib/fa/fonts/fontawesome-webfont.woff') +
-  '"); }';
-document.head.appendChild(fa);
-
 function resetMessage() {
   $("#result")
     .removeClass()
@@ -102,6 +95,9 @@ $('body').on('click', '#downloadAll', function() {
   _.each(object, function(data) {
     var url = "https://www.archive.org" + data.sources[0].file;
     var title = data.title;
+    console.log(data);
+    title = title.replace("->", "");
+    title = title.replace(">", "");
     deferreds.push(deferredAddZip(url, title + ".mp3", zip));
   });
 
@@ -125,6 +121,9 @@ function doProgress(oEvent) {
     $('#circle').circleProgress('value', percent);
     $('#circle').on('circle-animation-progress', function(event, progress) {
       Loading('Downloading the show now. Hang tight for a sec. ' + (parseInt(percent * 100) + '%'));
+    });
+    $('#circle').on('circle-animation-end', function(event) {
+      Message("All done!");
     });
   }
 }
