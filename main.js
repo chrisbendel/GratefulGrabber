@@ -80,7 +80,7 @@ $('body').on('click', '#downloadAll', function() {
     value: .01,
     size: 200,
     animation: {
-      duration: 400,
+      duration: 1000,
       easing: "circleProgressEasing"
     },
     fill: {
@@ -96,8 +96,10 @@ $('body').on('click', '#downloadAll', function() {
     var url = "https://www.archive.org" + data.sources[0].file;
     var title = data.title;
     console.log(data);
-    title = title.replace("->", "");
-    title = title.replace(">", "");
+    title = title.replace("*", "").replace("->", "").replace(">", "").replace("/", "").replace("?", "").replace("<", "").replace("|", "");
+    // title = title.replce("*", "");
+    // title = title.replace("->", "");
+    // title = title.replace(">", "");
     deferreds.push(deferredAddZip(url, title + ".mp3", zip));
   });
 
