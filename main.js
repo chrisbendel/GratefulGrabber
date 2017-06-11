@@ -28,7 +28,7 @@ _.each(myList, function(details) {
     trackLink =
       '<a href="' +
       url +
-      '" style="margin-left: auto; margin-right: auto;" class="downloadfile dropdown-item" download>' +
+      '"class="downloadfile dropdown-item" download>' +
       details.title +
       "</a>";
   object.push(details);
