@@ -1,29 +1,13 @@
 var xhr = {};
 
-function resetMessage() {
-  $("#result").removeClass().text("");
-}
-
-function Message(text) {
-  resetMessage();
-  $("#result").addClass("alert alert-success").text(text);
-}
-
-function Loading(text) {
-  $("#result").addClass("alert alert-warning").text(text);
-}
-
-function Error(text) {
-  resetMessage();
-  $("#result").addClass("alert alert-danger").text(text);
-}
-
 var songs = [], object = [];
 
 var list = $("#wrap").find(".container:last").find("script:last").html(),
   myList = list.match(/\{\"title\"(.*?\}\]\})/g);
+
 _.each(myList, function(details) {
   details = JSON.parse(details);
+
   var url = "https://www.archive.org" + details.sources[0].file,
     trackLink =
       '<a href="' +
@@ -49,6 +33,7 @@ const imageNames = [
   "terrapin.jpg",
   "terrapins.jpg"
 ];
+
 var images = [];
 _.each(imageNames, function(name) {
   images.push(chrome.extension.getURL("icons/" + name));
@@ -91,29 +76,45 @@ function deferredAddZip(url, filename, zip) {
   return deferred;
 }
 
+//Building our own text file with source information because archive blocks it on server
+var notes = "";
+
+var songList = $("#descript").text();
+songList = songList.split(",");
+
+var keys = $(".key")
+  .map(function() {
+    return $(this).text();
+  })
+  .get();
+
+var values = $(".value")
+  .map(function() {
+    return $(this).text();
+  })
+  .get();
+
+for (i = 0; i < keys.length; i++) {
+  notes = notes + keys[i] + ": " + values[i] + "\n";
+}
+notes += "\n\n";
+
+_.each(songList, function(song) {
+  notes += song.trim() + "\n";
+});
+
+var showNotes = $(".content").text();
+notes += "\n\n" + showNotes + "\n";
+
+console.log(notes);
+
 $("body").on("click", "#downloadAll", function() {
-  resetMessage();
-
-  $("#circle").circleProgress({
-    value: 0.01,
-    size: 200,
-    animation: {
-      duration: 1000,
-      easing: "circleProgressEasing"
-    },
-    fill: {
-      gradient: ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]
-    }
-  });
-
-  var zip = new JSZip(),
-    deferreds = [],
-    showName = $(".key-val-big:contains('Published')").find("a:first").text();
+  var showName = $(".key-val-big:contains('Published')").find("a:first").text();
+  var deferreds = [], zip = new JSZip();
 
   _.each(object, function(data) {
     var url = "https://www.archive.org" + data.sources[0].file;
     var title = data.title;
-    console.log(data);
     title = title
       .replace("*", "")
       .replace("->", "")
@@ -125,6 +126,8 @@ $("body").on("click", "#downloadAll", function() {
     deferreds.push(deferredAddZip(url, title + ".mp3", zip));
   });
 
+  zip.file("notes.txt", notes);
+
   $.when
     .apply($, deferreds)
     .done(function() {
@@ -133,7 +136,6 @@ $("body").on("click", "#downloadAll", function() {
       });
 
       saveAs(blob, showName + ".zip");
-      Message("Your download has finished!");
     })
     .fail(function(err) {
       Error(err);
@@ -145,18 +147,7 @@ function doProgress(oEvent) {
     var percentComplete = oEvent.loaded / oEvent.total;
     updatePercent(oEvent.target.responseURL, percentComplete);
     var percent = getTotalPercent() / object.length;
-    console.log(percent);
     $("#progressBar").val(percent);
-    // $("#circle").circleProgress("value", percent);
-    // $("#circle").on("circle-animation-progress", function(event, progress) {
-    //   Loading(
-    //     "Downloading the show now. Hang tight for a sec. " +
-    //       (parseInt(percent * 100) + "%")
-    //   );
-    // });
-    // $("#circle").on("circle-animation-end", function(event) {
-    //   Message("All done!");
-    // });
   }
 }
 

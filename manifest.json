@@ -47,7 +47,6 @@
         "js/jszip-utils/jszip-utils.js",
         "js/filesaver/FileSaver.min.js",
         "js/mustache/mustache.min.js",
-        "js/circle-progress.min.js",
         "main.js"
       ],
       "run_at": "document_end"
