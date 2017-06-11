@@ -23,7 +23,17 @@
   "content_security_policy": "script-src 'self'; object-src 'self'",
   "web_accessible_resources": [
     "box.html",
-    "icons/gdpainting.png"
+    "icons/gdpainting.png",
+    "icons/neutron.jpg",
+    "icons/owl.png",
+    "icons/popeye.jpeg",
+    "icons/regularstealie.jpg",
+    "icons/rose.jpg",
+    "icons/spr1990.jpg",
+    "icons/sunflowers.jpg",
+    "icons/sunmoon.jpeg",
+    "icons/terrapin.jpg",
+    "icons/terrapins.jpg"
   ],
   "content_scripts": [
     {
