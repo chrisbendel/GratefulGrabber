@@ -106,8 +106,6 @@ _.each(songList, function(song) {
 var showNotes = $(".content").text();
 notes += "\n\n" + showNotes + "\n";
 
-console.log(notes);
-
 $("body").on("click", "#downloadAll", function() {
   var showName = $(".key-val-big:contains('Published')").find("a:first").text();
   var deferreds = [], zip = new JSZip();
