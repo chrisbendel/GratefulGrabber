@@ -113,7 +113,15 @@ $("body").on("click", "#downloadAll", function() {
   _.each(object, function(data) {
     var url = "https://www.archive.org" + data.sources[0].file;
     var title = data.title;
-    title = title.replace(/[^a-zA-Z]/g, "");
+    title = title
+      .replace("*", "")
+      .replace("->", "")
+      .replace(">", "")
+      .replace("/", "")
+      .replace("?", "")
+      .replace("<", "")
+      .replace(/\/+/g, "")
+      .replace("|", "");
     deferreds.push(deferredAddZip(url, title + ".mp3", zip));
   });
 
