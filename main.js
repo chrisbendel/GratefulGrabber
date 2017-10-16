@@ -20,6 +20,7 @@ _.each(myList, function(details) {
 });
 
 var req = new XMLHttpRequest();
+
 const imageNames = [
   "gdpainting.png",
   "neutron.jpg",
@@ -120,11 +121,13 @@ $("body").on("click", "#downloadAll", function() {
     let base = "https://archive.org/download/" + identifier;
     let text = base + show.files["/info.txt"];
     let showName = show.metadata.date + " " + show.metadata.venue;
-
+    _.each(show.files, function (file) {
+      console.log(file);
+    });
   });
 
   var deferreds = [], zip = new JSZip();
-
+  console.log(object, songs);
   // _.each(object, function(data) {
   //   var url = "https://www.archive.org" + data.sources[0].file;
   //   var title = data.title;
