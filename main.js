@@ -115,45 +115,47 @@ async function fetchShow() {
 $("body").on("click", "#downloadAll", function() {
 
   fetchShow().then(show => {
-    console.log(show);
     let identifier = show.metadata.identifier;
     let base = "https://archive.org/download/" + identifier;
     let text = base + show.files["/info.txt"];
     let showName = show.metadata.date + " " + show.metadata.venue;
+    let mp3_files = _.pick(show.files, function(file) { return file.format === "VBR MP3" });
+
+    let deferreds = [], zip = new JSZip();
+
+    Object.keys(mp3_files).forEach(function(key){
+      data = mp3_files[key];
+      var url = base + key;
+      var title = data.title;
+      title = title
+        .replace("*", "")
+        .replace("->", "")
+        .replace(">", "")
+        .replace("/", "")
+        .replace("?", "")
+        .replace("<", "")
+        .replace(/\/+/g, "")
+        .replace("|", "");
+      deferreds.push(deferredAddZip(url, title + ".mp3", zip));
+    });
+
+    zip.file("notes.txt", notes);
+
+    $.when
+      .apply($, deferreds)
+      .done(function() {
+        var blob = zip.generate({
+          type: "blob"
+        });
+
+        saveAs(blob, showName + ".zip");
+      })
+      .fail(function(err) {
+        Error(err);
+      });
 
   });
 
-  var deferreds = [], zip = new JSZip();
-
-  // _.each(object, function(data) {
-  //   var url = "https://www.archive.org" + data.sources[0].file;
-  //   var title = data.title;
-  //   title = title
-  //     .replace("*", "")
-  //     .replace("->", "")
-  //     .replace(">", "")
-  //     .replace("/", "")
-  //     .replace("?", "")
-  //     .replace("<", "")
-  //     .replace(/\/+/g, "")
-  //     .replace("|", "");
-  //   deferreds.push(deferredAddZip(url, title + ".mp3", zip));
-  // });
-
-  // zip.file("notes.txt", notes);
-
-  // $.when
-  //   .apply($, deferreds)
-  //   .done(function() {
-  //     var blob = zip.generate({
-  //       type: "blob"
-  //     });
-
-  //     saveAs(blob, showName + ".zip");
-  //   })
-  //   .fail(function(err) {
-  //     Error(err);
-  //   });
 });
 
 function doProgress(oEvent) {
