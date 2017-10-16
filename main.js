@@ -42,6 +42,7 @@ _.each(imageNames, function(name) {
 var randomImage = images[Math.floor(Math.random() * images.length)];
 
 req.open("GET", chrome.extension.getURL("box.html"), true);
+
 req.onreadystatechange = function() {
   if (req.readyState == 4 && req.status == 200) {
     var individualSong;
@@ -106,39 +107,53 @@ _.each(songList, function(song) {
 var showNotes = $(".content").text();
 notes += "\n\n" + showNotes + "\n";
 
-$("body").on("click", "#downloadAll", function() {
-  var showName = $(".key-val-big:contains('Published')").find("a:first").text();
-  var deferreds = [], zip = new JSZip();
+async function fetchShow() {
+  let data = await (await fetch(window.location.href + "&output=json")).json();
+  return data;
+}
 
-  _.each(object, function(data) {
-    var url = "https://www.archive.org" + data.sources[0].file;
-    var title = data.title;
-    title = title
-      .replace("*", "")
-      .replace("->", "")
-      .replace(">", "")
-      .replace("/", "")
-      .replace("?", "")
-      .replace("<", "")
-      .replace(/\/+/g, "")
-      .replace("|", "");
-    deferreds.push(deferredAddZip(url, title + ".mp3", zip));
+$("body").on("click", "#downloadAll", function() {
+
+  fetchShow().then(show => {
+    console.log(show);
+    let identifier = show.metadata.identifier;
+    let base = "https://archive.org/download/" + identifier;
+    let text = base + show.files["/info.txt"];
+    let showName = show.metadata.date + " " + show.metadata.venue;
+
   });
 
-  zip.file("notes.txt", notes);
+  var deferreds = [], zip = new JSZip();
 
-  $.when
-    .apply($, deferreds)
-    .done(function() {
-      var blob = zip.generate({
-        type: "blob"
-      });
+  // _.each(object, function(data) {
+  //   var url = "https://www.archive.org" + data.sources[0].file;
+  //   var title = data.title;
+  //   title = title
+  //     .replace("*", "")
+  //     .replace("->", "")
+  //     .replace(">", "")
+  //     .replace("/", "")
+  //     .replace("?", "")
+  //     .replace("<", "")
+  //     .replace(/\/+/g, "")
+  //     .replace("|", "");
+  //   deferreds.push(deferredAddZip(url, title + ".mp3", zip));
+  // });
 
-      saveAs(blob, showName + ".zip");
-    })
-    .fail(function(err) {
-      Error(err);
-    });
+  // zip.file("notes.txt", notes);
+
+  // $.when
+  //   .apply($, deferreds)
+  //   .done(function() {
+  //     var blob = zip.generate({
+  //       type: "blob"
+  //     });
+
+  //     saveAs(blob, showName + ".zip");
+  //   })
+  //   .fail(function(err) {
+  //     Error(err);
+  //   });
 });
 
 function doProgress(oEvent) {
