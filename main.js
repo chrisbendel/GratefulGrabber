@@ -78,34 +78,52 @@ function deferredAddZip(url, filename, zip) {
 }
 
 //Building our own text file with source information because archive blocks it on server
-var notes = "";
 
-var songList = $("#descript").text();
-songList = songList.split(",");
-
-var keys = $(".key")
-  .map(function() {
-    return $(this).text();
-  })
-  .get();
-
-var values = $(".value")
-  .map(function() {
-    return $(this).text();
-  })
-  .get();
-
-for (i = 0; i < keys.length; i++) {
-  notes = notes + keys[i] + ": " + values[i] + "\n";
+function noteLine(key, value)
+{
+  if (Array.isArray(value)) {
+    value = value[0];
+  }
+  return key + ": " + value + "\n";
 }
-notes += "\n\n";
 
-_.each(songList, function(song) {
-  notes += song.trim() + "\n";
-});
+function trackListing(description)
+{
+  return description[0].split(",").map(function(track) { return track.trim(); }).join("\n")
+}
 
-var showNotes = $(".content").text();
-notes += "\n\n" + showNotes + "\n";
+function buildNotes(metadata)
+{
+  /*
+  Difference in JSON vs UI, UI has less/better keys, JSON has waayyy more info
+  Some metadata is either an array/string, the pattern so far is first element is used (at least in my Dead in Alaska example).
+  Maybe just display all metadata with weird keys like "Creator" and "Coverage" ?? 
+  */
+
+  let notes = "";
+
+  notes += noteLine("Collection", metadata['collection'])
+  notes += noteLine("Band/Artist", metadata['creator'])
+  notes += noteLine("Has_mp3", metadata['has_mp3'])
+  notes += noteLine("Identifier", metadata['identifier'])
+  notes += noteLine("Lineage", metadata['lineage'])
+  notes += noteLine("Location", metadata['coverage'])
+  notes += noteLine("Shndiscs", metadata['shndiscs'])
+  notes += noteLine("Source", metadata['source'])
+  notes += noteLine("Type", metadata['type'])
+  notes += noteLine("Venue", metadata['venue'])
+  notes += noteLine("Year", metadata['year'])
+
+  notes += "\n\n";
+
+  notes += trackListing(metadata["description"]);
+
+  notes += "\n\n";
+
+  notes += metadata['notes'][0];
+  notes += "\n";
+  return notes;
+}
 
 async function fetchShow() {
   let data = await (await fetch(window.location.href + "&output=json")).json();
@@ -120,7 +138,7 @@ $("body").on("click", "#downloadAll", function() {
     let text = base + show.files["/info.txt"];
     let showName = show.metadata.date + " " + show.metadata.venue;
     let mp3_files = _.pick(show.files, function(file) { return file.format === "VBR MP3" });
-
+    let notes = buildNotes(show.metadata);
     let deferreds = [], zip = new JSZip();
 
     Object.keys(mp3_files).forEach(function(key){
