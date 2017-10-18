@@ -4,9 +4,9 @@ fetchShow().then(show => {
   let identifier = show.metadata.identifier;
   let base = "https://archive.org/download/" + identifier;
   let mp3_files = _.pick(show.files, function(file) { return file.format === "VBR MP3" });
-  let text = base + show.files["/info.txt"];
+  let info_file = _.pick(show.files, function(file) { return file.format === "Text" });
+  info_file = base + Object.keys(info_file)[0]
   let showName = show.metadata.date + " " + show.metadata.venue;
-  let notes = buildNotes(show.metadata);
   let deferreds = [], zip = new JSZip();
   let songs, url_links;
 
@@ -83,8 +83,8 @@ fetchShow().then(show => {
       deferreds.push(deferredAddZip(obj['url'], obj['title'] + ".mp3", zip, Object.keys(url_links).length));
     });    
     
-    zip.file("notes.txt", notes);
-
+    deferreds.push(deferredAddZip(info_file, "info.txt", zip, Object.keys(url_links).length));
+      
     $.when
       .apply($, deferreds)
       .done(function() {
@@ -122,54 +122,6 @@ function deferredAddZip(url, filename, zip, numTracks) {
     }
   );
   return deferred;
-}
-
-//Building our own text file with source information because archive blocks it on server
-
-function noteLine(key, value)
-{
-  if (Array.isArray(value)) {
-    value = value[0];
-  }
-  return key + ": " + value + "\n";
-}
-
-function trackListing(description)
-{
-  return description[0].split(",").map(function(track) { return track.trim(); }).join("\n")
-}
-
-function buildNotes(metadata)
-{
-  /*
-  Difference in JSON vs UI, UI has less/better keys, JSON has waayyy more info
-  Some metadata is either an array/string, the pattern so far is first element is used (at least in my Dead in Alaska example).
-  Maybe just display all metadata with weird keys like "Creator" and "Coverage" ?? 
-  */
-
-  let notes = "";
-
-  notes += noteLine("Collection", metadata['collection'])
-  notes += noteLine("Band/Artist", metadata['creator'])
-  notes += noteLine("Has_mp3", metadata['has_mp3'])
-  notes += noteLine("Identifier", metadata['identifier'])
-  notes += noteLine("Lineage", metadata['lineage'])
-  notes += noteLine("Location", metadata['coverage'])
-  notes += noteLine("Shndiscs", metadata['shndiscs'])
-  notes += noteLine("Source", metadata['source'])
-  notes += noteLine("Type", metadata['type'])
-  notes += noteLine("Venue", metadata['venue'])
-  notes += noteLine("Year", metadata['year'])
-
-  notes += "\n\n";
-
-  notes += trackListing(metadata["description"]);
-
-  notes += "\n\n";
-
-  notes += metadata['notes'][0];
-  notes += "\n";
-  return notes;
 }
 
 async function fetchShow() {
