@@ -1,63 +1,109 @@
 var xhr = {};
 
-var songs = [], object = [];
+fetchShow().then(show => {
+  let identifier = show.metadata.identifier;
+  let base = "https://archive.org/download/" + identifier;
+  let mp3_files = _.pick(show.files, function(file) { return file.format === "VBR MP3" });
+  let info_file = _.pick(show.files, function(file) { return file.format === "Text" });
+  info_file = base + Object.keys(info_file)[0]
+  let showName = show.metadata.date + " " + show.metadata.venue;
+  let deferreds = [], zip = new JSZip();
+  let songs, url_links;
 
-var list = $("#wrap").find(".container:last").find("script:last").html(),
-  myList = list.match(/\{\"title\"(.*?\}\]\})/g);
+  /* Shared download links between Indivual and Zip features */
 
-_.each(myList, function(details) {
-  details = JSON.parse(details);
+  url_links = Object.keys(mp3_files).map(function(key){
+    data = mp3_files[key];
+    var url = base + key;
+    var title = data.title;
+    var ret = {}
+    title = title
+      .replace("*", "")
+      .replace("->", "")
+      .replace(">", "")
+      .replace("/", "")
+      .replace("?", "")
+      .replace("<", "")
+      .replace(/\/+/g, "")
+      .replace("|", "");
+    return { 'title': title, 'url': url }
+  })
 
-  var url = "https://www.archive.org" + details.sources[0].file,
-    trackLink =
+  /* Start Individual Songs */
+
+  songs = url_links.map(function(obj) {
+    var trackLink =
       '<a href="' +
-      url +
+      obj['url'] +
       '"class="downloadfile dropdown-item" download>' +
-      details.title +
+      obj['title'] +
       "</a>";
-  object.push(details);
-  songs.push(trackLink);
+    return trackLink;
+  });
+
+  var req = new XMLHttpRequest();
+  const imageNames = [
+    "gdpainting.png",
+    "neutron.jpg",
+    "owl.png",
+    "popeye.jpeg",
+    "regularstealie.jpg",
+    "rose.jpg",
+    "spr1990.jpg",
+    "sunflowers.jpg",
+    "sunmoon.jpeg",
+    "terrapin.jpg",
+    "terrapins.jpg"
+  ];
+
+  var images = [];
+  _.each(imageNames, function(name) {
+    images.push(chrome.extension.getURL("icons/" + name));
+  });
+
+  var randomImage = images[Math.floor(Math.random() * images.length)];
+
+  req.open("GET", chrome.extension.getURL("box.html"), true);
+
+  req.onreadystatechange = function() {
+    if (req.readyState == 4 && req.status == 200) {
+      var template = Mustache.to_html(req.responseText, {
+        songs: songs,
+        img: randomImage
+      });
+      $("#theatre-ia-wrap").after(template);
+    }
+  };
+  req.send(null);
+
+  /* Start of Download Zip */
+
+  $("body").on("click", "#downloadAll", function() {
+    url_links.forEach(function(obj) {
+      deferreds.push(deferredAddZip(obj['url'], obj['title'] + ".mp3", zip, Object.keys(url_links).length));
+    });    
+    
+    deferreds.push(deferredAddZip(info_file, "info.txt", zip, Object.keys(url_links).length));
+      
+    $.when
+      .apply($, deferreds)
+      .done(function() {
+        var blob = zip.generate({
+          type: "blob"
+        });
+
+        saveAs(blob, showName + ".zip");
+      })
+      .fail(function(err) {
+        Error(err);
+      });
+
+  });
+
+
 });
 
-var req = new XMLHttpRequest();
-const imageNames = [
-  "gdpainting.png",
-  "neutron.jpg",
-  "owl.png",
-  "popeye.jpeg",
-  "regularstealie.jpg",
-  "rose.jpg",
-  "spr1990.jpg",
-  "sunflowers.jpg",
-  "sunmoon.jpeg",
-  "terrapin.jpg",
-  "terrapins.jpg"
-];
-
-var images = [];
-_.each(imageNames, function(name) {
-  images.push(chrome.extension.getURL("icons/" + name));
-});
-
-var randomImage = images[Math.floor(Math.random() * images.length)];
-
-req.open("GET", chrome.extension.getURL("box.html"), true);
-req.onreadystatechange = function() {
-  if (req.readyState == 4 && req.status == 200) {
-    var individualSong;
-    _.each(myList, function(track) {
-      track = JSON.parse(track);
-    });
-    var template = Mustache.to_html(req.responseText, {
-      songs: songs,
-      img: randomImage
-    });
-    $("#theatre-ia-wrap").after(template);
-  }
-};
-req.send(null);
-
-function deferredAddZip(url, filename, zip) {
+function deferredAddZip(url, filename, zip, numTracks) {
   var deferred = $.Deferred();
   JSZipUtils.getBinaryContent(
     url,
@@ -71,81 +117,23 @@ function deferredAddZip(url, filename, zip) {
         deferred.resolve(data);
       }
     },
-    doProgress
+    function(oEvent) { 
+      return doProgress(oEvent, numTracks); 
+    }
   );
   return deferred;
 }
 
-//Building our own text file with source information because archive blocks it on server
-var notes = "";
-
-var songList = $("#descript").text();
-songList = songList.split(",");
-
-var keys = $(".key")
-  .map(function() {
-    return $(this).text();
-  })
-  .get();
-
-var values = $(".value")
-  .map(function() {
-    return $(this).text();
-  })
-  .get();
-
-for (i = 0; i < keys.length; i++) {
-  notes = notes + keys[i] + ": " + values[i] + "\n";
+async function fetchShow() {
+  let data = await (await fetch(window.location.href + "&output=json")).json();
+  return data;
 }
-notes += "\n\n";
 
-_.each(songList, function(song) {
-  notes += song.trim() + "\n";
-});
-
-var showNotes = $(".content").text();
-notes += "\n\n" + showNotes + "\n";
-
-$("body").on("click", "#downloadAll", function() {
-  var showName = $(".key-val-big:contains('Published')").find("a:first").text();
-  var deferreds = [], zip = new JSZip();
-
-  _.each(object, function(data) {
-    var url = "https://www.archive.org" + data.sources[0].file;
-    var title = data.title;
-    title = title
-      .replace("*", "")
-      .replace("->", "")
-      .replace(">", "")
-      .replace("/", "")
-      .replace("?", "")
-      .replace("<", "")
-      .replace(/\/+/g, "")
-      .replace("|", "");
-    deferreds.push(deferredAddZip(url, title + ".mp3", zip));
-  });
-
-  zip.file("notes.txt", notes);
-
-  $.when
-    .apply($, deferreds)
-    .done(function() {
-      var blob = zip.generate({
-        type: "blob"
-      });
-
-      saveAs(blob, showName + ".zip");
-    })
-    .fail(function(err) {
-      Error(err);
-    });
-});
-
-function doProgress(oEvent) {
+function doProgress(oEvent, numTracks) {
   if (oEvent.lengthComputable) {
     var percentComplete = oEvent.loaded / oEvent.total;
     updatePercent(oEvent.target.responseURL, percentComplete);
-    var percent = getTotalPercent() / object.length;
+    var percent = getTotalPercent() / numTracks;
     $("#progressBar").val(percent);
   }
 }
