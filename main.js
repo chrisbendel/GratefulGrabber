@@ -11,8 +11,7 @@ fetchShow().then(show => {
   let songs, url_links;
 
   /* Shared download links between Indivual and Zip features */
-
-  url_links = Object.keys(mp3_files).map(function(key){
+  url_links = Object.keys(mp3_files).map(function(key, index) {
     data = mp3_files[key];
     var url = base + key;
     var title = data.title;
@@ -26,11 +25,10 @@ fetchShow().then(show => {
       .replace("<", "")
       .replace(/\/+/g, "")
       .replace("|", "");
-    return { 'title': title, 'url': url }
+    return { 'title': (index + 1) + ". " + title, 'url': url }
   })
 
   /* Start Individual Songs */
-
   songs = url_links.map(function(obj) {
     var trackLink =
       '<a href="' +
@@ -79,7 +77,7 @@ fetchShow().then(show => {
   /* Start of Download Zip */
 
   $("body").on("click", "#downloadAll", function() {
-    url_links.forEach(function(obj) {
+    url_links.forEach(function(obj, index) {
       deferreds.push(deferredAddZip(obj['url'], obj['title'] + ".mp3", zip, Object.keys(url_links).length));
     });    
     
@@ -97,10 +95,7 @@ fetchShow().then(show => {
       .fail(function(err) {
         Error(err);
       });
-
   });
-
-
 });
 
 function deferredAddZip(url, filename, zip, numTracks) {
