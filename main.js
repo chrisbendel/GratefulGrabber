@@ -16,26 +16,14 @@ fetchShow().then(show => {
     var url = base + key;
     var title = data.title;
     var ret = {}
-    title = title
-      .replace("*", "")
-      .replace("->", "")
-      .replace(">", "")
-      .replace("/", "")
-      .replace("?", "")
-      .replace("<", "")
-      .replace(/\/+/g, "")
-      .replace("|", "");
-    return { 'title': (index + 1) + ". " + title, 'url': url }
+    title = title.replace(/-|[^-_,A-Za-z0-9 ]+/g,'').trim();
+    return { 'title': (index + 1) + ". " + title, 'track': title, 'url': url }
   })
 
   /* Start Individual Songs */
   songs = url_links.map(function(obj) {
     var trackLink =
-      '<a href="' +
-      obj['url'] +
-      '"class="downloadfile dropdown-item" download>' +
-      obj['title'] +
-      "</a>";
+     `<div onClick="downloadSong('${obj['url']}', '${obj['track']}')" style="cursor: pointer; margin: 3px 0; text-align: left; padding-left: 2px;" class="dropdown-item">${obj['title']}</div>`
     return trackLink;
   });
 
@@ -153,4 +141,12 @@ function getTotalPercent() {
     0
   );
   return sum;
+}
+
+function downloadSong(url, title) {
+  fetch(url)
+  .then(res => res.blob())
+  .then(blob => {
+    saveAs(blob, title);
+  });
 }
