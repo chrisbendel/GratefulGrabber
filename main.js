@@ -1,5 +1,21 @@
 var xhr = {};
 
+var s = document.createElement('script');
+// TODO: add "script.js" to web_accessible_resources in manifest.json
+s.src = chrome.runtime.getURL('main.js');
+s.onload = function() {
+  this.remove();
+};
+
+var x = document.createElement('script');
+x.src = chrome.runtime.getURL("js/filesaver/FileSaver.min.js");
+x.onload = function() {
+  this.remove();
+};
+
+(document.head || document.documentElement).appendChild(s);
+(document.head || document.documentElement).appendChild(x);
+
 fetchShow().then(show => {
   let identifier = show.metadata.identifier;
   let base = "https://archive.org/download/" + identifier;
@@ -15,15 +31,21 @@ fetchShow().then(show => {
     data = mp3_files[key];
     var url = base + key;
     var title = data.title;
-    var ret = {}
+    var ret = {};
     title = title.replace(/-|[^-_,A-Za-z0-9 ]+/g,'').trim();
     return { 'title': (index + 1) + ". " + title, 'track': title, 'url': url }
-  })
+  });
 
   /* Start Individual Songs */
   songs = url_links.map(function(obj) {
     var trackLink =
-     `<div onClick="downloadSong('${obj['url']}', '${obj['track']}')" style="cursor: pointer; margin: 3px 0; text-align: left; padding-left: 2px;" class="dropdown-item">${obj['title']}</div>`
+     `<div onClick="downloadSong('${obj['url']}', '${obj['track']}')" 
+           style="cursor: pointer; margin: 3px 0; text-align: left; padding-left: 2px;" 
+           onmouseover="this.style.backgroundColor='#d1ecf1'" 
+           onmouseout="this.style.backgroundColor='#FFF'" 
+           class="dropdown-item">
+        ${obj['title']}
+      </div>`;
     return trackLink;
   });
 
@@ -144,6 +166,14 @@ function getTotalPercent() {
 }
 
 function downloadSong(url, title) {
+  const bar = document.getElementById('progressBar');
+  const msg = document.createElement('div');
+  msg.className = 'alert alert-info';
+  msg.textContent = `Download for "${title}" has started and will be finished shortly.`;
+  bar.parentNode.insertBefore(msg, bar.nextSibling);
+  setTimeout(() => {
+    bar.parentNode.removeChild(msg);
+  }, 3000);
   fetch(url)
   .then(res => res.blob())
   .then(blob => {
