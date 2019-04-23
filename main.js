@@ -30,7 +30,7 @@ fetchShow().then(show => {
   url_links = Object.keys(mp3_files).map(function(key, index) {
     data = mp3_files[key];
     var url = base + key;
-    var title = data.title;
+    var title = data.title || data.original;
     var ret = {};
     title = title.replace(/-|[^-_,A-Za-z0-9 ]+/g,'').trim();
     return { 'title': (index + 1) + ". " + title, 'track': title, 'url': url }
