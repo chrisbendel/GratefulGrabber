@@ -1,13 +1,11 @@
-var xhr = {};
+let s = document.createElement('script');
 
-var s = document.createElement('script');
-// TODO: add "script.js" to web_accessible_resources in manifest.json
-s.src = chrome.runtime.getURL('main.js');
-s.onload = function() {
-  this.remove();
-};
+// s.src = chrome.runtime.getURL('main.js');
+// s.onload = function() {
+//   this.remove();
+// };
 
-var x = document.createElement('script');
+let x = document.createElement('script');
 x.src = chrome.runtime.getURL("js/filesaver/FileSaver.min.js");
 x.onload = function() {
   this.remove();
@@ -16,66 +14,79 @@ x.onload = function() {
 (document.head || document.documentElement).appendChild(s);
 (document.head || document.documentElement).appendChild(x);
 
+const imageNames = [
+  "gdpainting.png",
+  "neutron.jpg",
+  "owl.png",
+  "popeye.jpeg",
+  "regularstealie.jpg",
+  "rose.jpg",
+  "spr1990.jpg",
+  "sunflowers.jpg",
+  "sunmoon.jpeg",
+  "terrapin.jpg",
+  "terrapins.jpg"
+];
+
+let images = [];
+_.each(imageNames, function(name) {
+  images.push(chrome.runtime.getURL("icons/" + name));
+});
+
+let randomImage = images[Math.floor(Math.random() * images.length)];
+
+let totals = [];
+let progressMap = {};
+
 fetchShow().then(show => {
+  console.log('show:', show);
   let identifier = show.metadata.identifier;
   let base = "https://archive.org/download/" + identifier;
   let mp3_files = _.pick(show.files, function(file) { return file.format === "VBR MP3" });
   let info_file = _.pick(show.files, function(file) { return file.format === "Text" });
+  console.log(info_file);
   info_file = base + Object.keys(info_file)[0]
   let showName = show.metadata.date + " " + show.metadata.venue;
-  let deferreds = [], zip = new JSZip();
+  console.log(mp3_files);
+  console.log('info file', info_file);
+  let zip = new JSZip();
   let songs, url_links;
-
+  let totalSize = _.reduce(mp3_files, (result, value) => result + (parseInt(value['size']) || 0), 0);
+  console.log(totalSize);
   /* Shared download links between Indivual and Zip features */
   url_links = Object.keys(mp3_files).map(function(key, index) {
-    data = mp3_files[key];
-    var url = base + key;
-    var title = data.title || data.original;
-    var ret = {};
+    let data = mp3_files[key];
+    let url = base + key;
+    let title = data.title || data.original;
     title = title.replace(/-|[^-_,A-Za-z0-9 ]+/g,'').trim();
-    return { 'title': (index + 1) + ". " + title, 'track': title, 'url': url }
+    return {
+      'title': (index + 1) + ". " + title,
+      'track': title, 'url': url
+    }
   });
 
   /* Start Individual Songs */
   songs = url_links.map(function(obj) {
-    var trackLink =
-     `<div onClick="downloadSong('${obj['url']}', '${obj['track']}')" 
-           style="cursor: pointer; margin: 3px 0; text-align: left; padding-left: 2px;" 
-           onmouseover="this.style.backgroundColor='#d1ecf1'" 
-           onmouseout="this.style.backgroundColor='#FFF'" 
+    let trackLink =
+     `<div onClick="downloadSong('${obj['url']}', '${obj['track']}')"
+           style="cursor: pointer; margin: 5px 0; text-align: left; padding-left: 2px;"
+           onmouseover="this.style.backgroundColor='#d1ecf1'"
+           onmouseout="this.style.backgroundColor='#FFF'"
            class="dropdown-item">
         ${obj['title']}
       </div>`;
     return trackLink;
   });
 
-  var req = new XMLHttpRequest();
-  const imageNames = [
-    "gdpainting.png",
-    "neutron.jpg",
-    "owl.png",
-    "popeye.jpeg",
-    "regularstealie.jpg",
-    "rose.jpg",
-    "spr1990.jpg",
-    "sunflowers.jpg",
-    "sunmoon.jpeg",
-    "terrapin.jpg",
-    "terrapins.jpg"
-  ];
+  let req = new XMLHttpRequest();
 
-  var images = [];
-  _.each(imageNames, function(name) {
-    images.push(chrome.extension.getURL("icons/" + name));
-  });
 
-  var randomImage = images[Math.floor(Math.random() * images.length)];
-
-  req.open("GET", chrome.extension.getURL("box.html"), true);
+  // TODO Replace with fetch API
+  req.open("GET", chrome.runtime.getURL("box.html"), true);
 
   req.onreadystatechange = function() {
     if (req.readyState == 4 && req.status == 200) {
-      var template = Mustache.to_html(req.responseText, {
+      let template = Mustache.to_html(req.responseText, {
         songs: songs,
         img: randomImage
       });
@@ -85,98 +96,77 @@ fetchShow().then(show => {
   req.send(null);
 
   /* Start of Download Zip */
-
   $("body").on("click", "#downloadAll", function() {
-    url_links.forEach(function(obj, index) {
-      deferreds.push(deferredAddZip(obj['url'], obj['title'] + ".mp3", zip, Object.keys(url_links).length));
-    });    
-    
-    deferreds.push(deferredAddZip(info_file, "info.txt", zip, Object.keys(url_links).length));
-      
-    $.when
-      .apply($, deferreds)
-      .done(function() {
-        var blob = zip.generate({
-          type: "blob"
-        });
+    showInfoMessage("Downloading your show now. This may take a while, please be patient!\n Tip: Keep this browser tab open to download faster!");
+    url_links.forEach(({title, track, url}) => {
+      zip.file(`${title}.mp3`, urlToPromise(url, totalSize), {binary: true});
+    });
 
-        saveAs(blob, showName + ".zip");
-      })
-      .fail(function(err) {
-        Error(err);
-      });
+    // TODO Zip file cors error
+    // zip.file("info.txt", urlToPromise(`https://${show.server}${show.dir}/gd1995-07-06.9119.txt`), {binary: true});
+
+    // zip.generateInternalStream({type:"blob"}).accumulate(function callback(err, content) {
+    //   if (err) {
+    //     console.error(err);
+    //   }
+    //   saveAs(content, `${showName}.zip`);
+    //   $("#progressBar").val(0);
+    //   progressMap = {};
+    // }, function updateCallback(metadata) {
+    //   $("#progressBar").val(metadata.percent|0);
+    // });
+
+    zip.generateAsync({type:"blob", compression: "DEFLATE", compressionOptions: {level: 1}}, function updateCallback(metadata) {
+      // TODO Show message that the zip is downloading
+      $("#progressBar").val(metadata.percent|0);
+    }).then(function callback(blob) {
+      saveAs(blob, `${showName}.zip`);
+      $("#progressBar").val(0);
+    }, function (e) {
+      console.error(e);
+    });
   });
 });
 
-function deferredAddZip(url, filename, zip, numTracks) {
-  var deferred = $.Deferred();
-  JSZipUtils.getBinaryContent(
-    url,
-    function startDownload(err, data) {
+
+function urlToPromise(url, size) {
+  return new Promise(function(resolve, reject) {
+    JSZipUtils.getBinaryContent(url, function (err, data) {
       if (err) {
-        deferred.reject(err);
+        reject(err);
       } else {
-        zip.file(filename, data, {
-          binary: true
-        });
-        deferred.resolve(data);
+        resolve(data);
       }
-    },
-    function(oEvent) { 
-      return doProgress(oEvent, numTracks); 
-    }
-  );
-  return deferred;
-}
-
-async function fetchShow() {
-  let data = await (await fetch(window.location.href + "&output=json")).json();
-  return data;
-}
-
-function doProgress(oEvent, numTracks) {
-  if (oEvent.lengthComputable) {
-    var percentComplete = oEvent.loaded / oEvent.total;
-    updatePercent(oEvent.target.responseURL, percentComplete);
-    var percent = getTotalPercent() / numTracks;
-    $("#progressBar").val(percent);
-  }
-}
-
-function updatePercent(url, percent) {
-  xhr[url] = percent;
-}
-
-function getPercents() {
-  return xhr;
-}
-
-function getTotalPercent() {
-  var array = _.map(getPercents(), function(value, index) {
-    return value;
+    }, (event) => {
+      progressMap[event.target.responseURL] = {
+        loaded: event.loaded
+      };
+      let totalProgress = _.reduce(progressMap, (result, value) => result + (parseInt(value['loaded']) || 0), 0) / size;
+      $("#progressBar").val(totalProgress * 100);
+    });
   });
-  var sum = _.reduce(
-    array,
-    function(a, b) {
-      return a + b;
-    },
-    0
-  );
-  return sum;
 }
 
-function downloadSong(url, title) {
+showInfoMessage = (message) => {
   const bar = document.getElementById('progressBar');
   const msg = document.createElement('div');
   msg.className = 'alert alert-info';
-  msg.textContent = `Download for "${title}" has started and will be finished shortly.`;
+  msg.textContent = message;
   bar.parentNode.insertBefore(msg, bar.nextSibling);
   setTimeout(() => {
     bar.parentNode.removeChild(msg);
-  }, 3000);
+  }, 7000);
+}
+
+function downloadSong(url, title) {
+  showInfoMessage(`Download for "${title}" has started and will be finished shortly.`)
   fetch(url)
-  .then(res => res.blob())
-  .then(blob => {
-    saveAs(blob, title);
-  });
+      .then(res => res.blob())
+      .then(blob => {
+        saveAs(blob, title);
+      });
+}
+
+async function fetchShow() {
+  return await (await fetch(window.location.href + "&output=json")).json();
 }

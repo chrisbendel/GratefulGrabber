@@ -1,6 +1,6 @@
 {
   "name": "Grateful Grabber",
-  "version": "2.4.3",
+  "version": "2.5.0",
   "manifest_version": 2,
   "description": "Easy soundboard downloads from archive!",
   "homepage_url": "https://chrome.google.com/webstore/detail/grateful-grabber/oaodbbeaklbdmjcghbkcfgmioafnjbfe?hl=en",
@@ -14,7 +14,7 @@
     "scripts": [
       "src/bg/background.js"
     ],
-    "persistent": true
+    "persistent": false
   },
   "permissions": [
     "https://archive.org/*",
@@ -45,7 +45,7 @@
       "js": [
         "js/jquery/jquery.js",
         "js/underscore-min.js",
-        "js/jszip/jszip.js",
+        "js/jszip/jszip.min.js",
         "js/jszip-utils/jszip-utils.js",
         "js/filesaver/FileSaver.min.js",
         "js/mustache/mustache.min.js",
