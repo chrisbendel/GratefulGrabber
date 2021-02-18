@@ -101,6 +101,30 @@ fetchShow().then(show => {
     url_links.forEach(({title, track, url}) => {
       zip.file(`${title}.mp3`, urlToPromise(url, totalSize), {binary: true});
     });
+    // let promises = [];
+    // url_links.forEach(({title, track, url}) => {
+    //   promises.push(fetch(url).then(res => res.blob()));
+    //   // zip.file(`${title}.mp3`, urlToPromise(url, totalSize), {binary: true});
+    // });
+    // promiseAllInBatches(url_links.map(link => link.url), 3).then(res => {
+    //   console.log(res);
+    // })
+    // while (promises.length) {
+    //   // 100 at at time
+    //   Promise.all(promises.splice(0, 3).map(f => Promise.resolve(f)) ).then(results => {
+    //     console.log(results);
+    //   });
+    // }
+
+
+    // Promise.all(promises).then(results => {
+    //   console.log(results);
+    // }).catch((err) => {
+    //   console.log(err);
+    // });
+
+    // return;
+
 
     // TODO Zip file cors error
     // zip.file("info.txt", urlToPromise(`https://${show.server}${show.dir}/gd1995-07-06.9119.txt`), {binary: true});
@@ -116,7 +140,7 @@ fetchShow().then(show => {
     //   $("#progressBar").val(metadata.percent|0);
     // });
 
-    zip.generateAsync({type:"blob", compression: "DEFLATE", compressionOptions: {level: 1}}, function updateCallback(metadata) {
+    zip.generateAsync({type:"blob", compression: "DEFLATE", compressionOptions: {level: 9}}, function updateCallback(metadata) {
       // TODO Show message that the zip is downloading
       $("#progressBar").val(metadata.percent|0);
     }).then(function callback(blob) {
@@ -128,6 +152,16 @@ fetchShow().then(show => {
   });
 });
 
+async function promiseAllInBatches(items, batchSize) {
+  let position = 0;
+  let results = [];
+  while (position < items.length) {
+    const itemsForBatch = items.slice(position, position + batchSize);
+    results = [...results, ...await Promise.all(itemsForBatch.map(item => fetch(item).then(res => res.blob())))];
+    position += batchSize;
+  }
+  return results;
+}
 
 function urlToPromise(url, size) {
   return new Promise(function(resolve, reject) {
