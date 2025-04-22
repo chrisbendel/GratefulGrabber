@@ -1,3 +1,5 @@
+# DEPRECATED - [see the new repo](https://github.com/chrisbendel/grateful-grabber)
+
 # GratefulGrabber
 SBD Grabber
 
